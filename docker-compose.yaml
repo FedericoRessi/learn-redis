@@ -18,4 +18,4 @@ services:
     environment:
       REDIS_URL: 'redis://redis:6379/0'
     volumes:
-      - ./test:/test
+      - ./tests:/tests
