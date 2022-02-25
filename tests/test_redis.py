@@ -1,3 +1,4 @@
+import json
 import os
 
 import pytest
@@ -52,3 +53,24 @@ def test_pubsub(redis_connection: redis.Redis):
     assert message['channel'] == 'my_channel'
     assert message['type'] == 'message'
     assert message['data'] == 'my_message'
+
+
+def test_stream(redis_connection: redis.Redis,
+                stream='stream',
+                group='group',
+                consumer='consumer'):
+    redis_connection.delete(stream, group, consumer)
+    redis_connection.xadd(name=stream, fields={'message': 'hello!'})
+    redis_connection.xgroup_create(name=stream, groupname=group, id='0-0')
+    redis_connection.xgroup_createconsumer(name=stream, groupname=group,
+                                           consumername=consumer)
+    result = redis_connection.xreadgroup(groupname=group,
+                                         consumername=consumer,
+                                         streams={stream: '>'})
+    print("")
+    assert result != []
+    for stream, messages in result:
+        assert messages != []
+        for message_id, message_data in messages:
+            print(f"{message_id}: {message_data}")
+            redis_connection.xack(stream, group, message_id)
