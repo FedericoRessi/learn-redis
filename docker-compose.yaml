@@ -1,0 +1,21 @@
+---
+
+version: '3.4'
+services:
+  redis:
+    image: redis
+    hostname: redis
+    ports:
+      - '6379:6379'
+
+  tests:
+    links:
+      - 'redis:6379'
+    build:
+      context: .
+      target: tests
+    hostname: tests
+    environment:
+      REDIS_URL: 'redis://redis:6379/0'
+    volumes:
+      - ./test:/test
