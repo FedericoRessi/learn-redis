@@ -40,5 +40,15 @@ def test_lock_acquire(redis_lock: redis.lock.Lock):
     assert not redis_lock.acquire(blocking=False)
 
 
-def test_subscribe(redis_connection):
-    pass
+def test_pubsub(redis_connection: redis.Redis):
+    pubsub = redis_connection.pubsub()
+    pubsub.subscribe('my_channel')
+    message = pubsub.get_message(timeout=5)
+    assert message['channel'] == 'my_channel'
+    assert message['type'] == 'subscribe'
+
+    redis_connection.publish('my_channel', 'my_message')
+    message = pubsub.get_message(timeout=5)
+    assert message['channel'] == 'my_channel'
+    assert message['type'] == 'message'
+    assert message['data'] == 'my_message'
